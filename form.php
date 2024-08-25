@@ -70,19 +70,50 @@ if ($currentUser->isAnonymous()) {
     color: #3498db;
     font-weight: bold;
 }
+		
+.button {
+    position: relative;
+    display: inline-block;
+    background-color: #001b6b; /* Dark blue */
+    color: #ffffff;
+    padding: 0.5rem 1.2rem;
+    border: 0;
+    border-radius: 8px;
+    transition: all 0.4s ease-in-out;
+	cursor: pointer;
+}
+		
+.button:hover {
+    background-color: #e9ab0d; /* Light orange */
+}
+		
+hr {
+  border-top: 1px dashed #4099f7; /* Light blue */
+}
+
+html * {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+	color: #4a4a4a;
+		}
+		
+.highlight:hover {
+    font-weight: bold;
+    color: #001b6b;
+}
+		
 </style>
 </head>
 <body>
-    <h1>Upload a File for Analysis</h1>
+    <h2>Upload a PDF document to be analyzed by GPT-4 AI model.</h2>
 
     <form id="uploadForm" enctype="multipart/form-data" method="POST" action="upload.php">
         <label for="document">Choose a file to upload:</label>
-        <input type="file" id="document" name="document" required><br><br>
+        <input type="file" id="document" name="document" required class="button">(max. file size: 2MB)<br><br>
 
-        <button type="submit">Upload and Analyze</button>
+        <button class="button" type="submit">Upload and Analyze</button>
     </form>
 
-    <h2>Response:</h2>
+    <h3>The results will be generated below:</h3><hr />
     <div id="response"></div>
 	<div id="loadingSpinner" style="display: none;">
     <div class="spinner">
@@ -129,7 +160,7 @@ if ($currentUser->isAnonymous()) {
                         color = 'red';
                     }
 
-                    resultElement.innerHTML = `${result.criterion}: <span style="color: ${color}; font-weight: bold;">${result.result}</span>`;
+                    resultElement.innerHTML = `<span class="highlight">${result.criterion}:</span> <span style="color: ${color}; font-weight: bold;">${result.result}<hr /></span>`;
                     responseDiv.appendChild(resultElement);
                 });
             }
