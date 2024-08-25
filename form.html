@@ -1,9 +1,39 @@
+<?php
+// Enable error reporting for debugging
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+use Drupal\Core\DrupalKernel;
+use Symfony\Component\HttpFoundation\Request;
+
+// Load the autoloader and Drupal Kernel
+$autoloader = require_once 'vendor/autoload.php'; // Adjust the path to your Drupal installation
+$request = Request::createFromGlobals();
+
+// Boot the Drupal Kernel and handle the request
+$kernel = DrupalKernel::createFromRequest($request, $autoloader, 'prod');
+$response = $kernel->handle($request);
+
+// Get the current user
+$currentUser = \Drupal::currentUser();
+
+// Check if the user is authenticated
+if ($currentUser->isAnonymous()) {
+    // Redirect to the login page if the user is not authenticated
+    header('Location: /access-denied.html');
+    exit;
+}
+
+// If the user is authenticated, proceed with rendering the form
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OpenAI File Upload Form</title>
+    <title>Analyze QA Policy Document</title>
 	<style>
 /* Ensure the loading spinner is below the response without centering it on the page */
 #loadingSpinner {
