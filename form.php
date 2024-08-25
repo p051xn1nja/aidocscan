@@ -21,7 +21,7 @@ $currentUser = \Drupal::currentUser();
 // Check if the user is authenticated
 if ($currentUser->isAnonymous()) {
     // Redirect to the login page if the user is not authenticated
-    header('Location: /access-denied.html');
+    header('Location: /access-denied.html'); // Adjust the path to your Drupal installation
     exit;
 }
 
