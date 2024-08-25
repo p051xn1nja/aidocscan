@@ -2,8 +2,30 @@
 
 set_time_limit(300); // 300 seconds = 5 minutes
 
-// Start session to store CSRF token and rate limiting
-session_start();
+// Drupal authentication
+
+use Drupal\Core\DrupalKernel;
+use Symfony\Component\HttpFoundation\Request;
+
+// Load the autoloader and Drupal Kernel
+$autoloader = require_once 'vendor/autoload.php'; // Adjust the path to your Drupal installation
+$request = Request::createFromGlobals();
+
+// Boot the Drupal Kernel and handle the request
+$kernel = DrupalKernel::createFromRequest($request, $autoloader, 'prod');
+$response = $kernel->handle($request);
+
+// Get the current user
+$currentUser = \Drupal::currentUser();
+
+// Check if the user is authenticated
+if ($currentUser->isAnonymous()) {
+    // Redirect to the login page if the user is not authenticated
+    header('Location: /access-denied.html'); // Adjust the path to your desired page
+    exit;
+}
+
+// If the user is authenticated, proceed with rendering the form
 
 // Load required libraries for handling .docx and .pdf files
 require 'vendor/autoload.php';
@@ -148,7 +170,7 @@ function analyze_with_openai($text, $criterion, $api_key) {
         "model" => "gpt-4-turbo",
         "messages" => [
             ["role" => "system", "content" => "You are a helpful assistant."],
-            ["role" => "user", "content" => "Analyze the following text to determine if the criterion is met:\n\nCriterion: $criterion\n\nDocument Text: $text\n\nAnswer with one of the following: Met, Partially Met, Not Met."]
+            ["role" => "user", "content" => "Analyze the following text to determine if the criterion is met:\n\nCriterion: $criterion\n\nDocument Text: $text\n\nAnswer with one of the following words **only**: Met, Partially Met, Not Met. Do not provide any additional comments or explanations."]
         ]
     ]);
 
