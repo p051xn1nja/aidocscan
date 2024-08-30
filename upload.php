@@ -27,6 +27,31 @@ if ($currentUser->isAnonymous()) {
 
 // If the user is authenticated, proceed with rendering the form
 
+// Directory to store the upload flags
+$upload_flag_dir = 'upload_flags';  // Change this to your preferred directory path
+$uid = $currentUser->id();
+$upload_flag_file = $upload_flag_dir . '/user_' . $uid . '.txt';
+
+// Check if the user has already uploaded a file
+if (file_exists($upload_flag_file)) {
+    echo json_encode(['error' => 'You have already uploaded a file.']);
+    exit;
+}
+
+// Ensure the directory exists for the upload flags
+if (!is_dir($upload_flag_dir)) {
+    if (!mkdir($upload_flag_dir, 0755, true)) {
+        echo json_encode(['error' => 'Failed to create directory for upload flags.']);
+        exit;
+    }
+}
+
+// Create the flag file to mark that the user has uploaded a file
+if (file_put_contents($upload_flag_file, "User $uid has uploaded a file.") === false) {
+    echo json_encode(['error' => 'Failed to create upload flag file.']);
+    exit;
+}
+
 // Load required libraries for handling .docx and .pdf files
 require 'vendor/autoload.php';
 
@@ -34,7 +59,7 @@ use PhpOffice\PhpWord\IOFactory;
 use Smalot\PdfParser\Parser;
 
 // OpenAI API Key
-$openai_api_key = 'YOUR_OPEN_AI_API_KEY'; // Replace with your OpenAI API key
+$openai_api_key = 'YOUR_OPEN_AI_SECRET_KEY'; // Replace with your OpenAI API key
 
 // Enable error reporting for debugging
 ini_set('display_errors', 1);
