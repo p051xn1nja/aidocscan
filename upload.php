@@ -46,12 +46,6 @@ if (!is_dir($upload_flag_dir)) {
     }
 }
 
-// Create the flag file to mark that the user has uploaded a file
-if (file_put_contents($upload_flag_file, "User $uid has uploaded a file.") === false) {
-    echo json_encode(['error' => 'Failed to create upload flag file.']);
-    exit;
-}
-
 // Load required libraries for handling .docx and .pdf files
 require 'vendor/autoload.php';
 
@@ -173,6 +167,12 @@ directives, Accountability, Transparency, Continuous Improvement, Cooperation, H
             "result" => $result
         ];
     }
+	
+	// After all checks are successful, create the flag file to mark that the user has uploaded a file
+if (file_put_contents($upload_flag_file, "User $uid has uploaded a file.") === false) {
+    echo json_encode(['error' => 'Failed to create upload flag file.']);
+    exit;
+}
 
     // Return the results as JSON
     echo json_encode(['results' => $results]);
