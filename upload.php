@@ -117,9 +117,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $criteria_list = [
         "1. Should include and Introduction or Background – Short description of the organization or institution (who, what, why, where, how) and what the document covers.",
         "2. Must include a Policy Statement. This means a general statement (of the organization's commitment to quality. It states a commitment to customer requirements and the requirements of the standard. It also contains a pledge to work toward continual improvement).",
-        "3. Must contain a vision statement and mission statement.",
-		"4. Should include core values of the organization.",
-		"5. Should include Guiding Principles (eg, Systems Approach to Training, Compliance to NATO policies, doctrines and
+        "3. Must contain a vision statement and mission statement. Vision must be future oriented and concise. Mission must answer to the following questions: Who, What, Where, When, Why",
+	"4. Should include core values of the organization.",
+	"5. Should include Guiding Principles (eg, Systems Approach to Training, Compliance to NATO policies, doctrines and
 directives, Accountability, Transparency, Continuous Improvement, Cooperation, High Quality Products.",
         "6. Should include the documents of Quality Management System as a reference (at least the titles).",
         "7. Should include Internal & External (e.g., SOPs and MoUs, NATO Policies and Regulations, Doctrine) or at list some list with the titles.",
@@ -132,14 +132,14 @@ directives, Accountability, Transparency, Continuous Improvement, Cooperation, H
         "14. Must include Roles and Responsibilities of Quality Management Team including Course Director, Course Admin, Officer with Primary Responsibilities, Training Breanch Chief Head, etc. Also must include Quality Management Team composition and organization diagram/chart.",
         "15. Should include a RACI Matrix",
         "16. Must include a Quality Assurance Review Cycle and/or Continuous Improvement Process, After Action Review, Post-Course Review, Curriculum Review Board, Annual QA (System/Institution) Internal Review, Annual QA Report, External re-accreditation.",
-        "17. Must include Key Performance Indicators (KPIs) and how used to measure progress. Also how the KPIs are measured - threshholds for low values.",
+        "17. Must include Key Performance Indicators (KPIs) and how used to measure progress. Also how the KPIs are measured - thresholds for low values.",
         "18. Must include surveys for students and graduate feedback, for supervisors, instructors and also staff satisfaction.",
         "19. Must include instructor monitoring and assessment as well as course monitoring.",
         "20. Must include a description of procedures (SOP/SOI) review cycle",
         "21. Must include a description of the QA Policy review or update cycle",
         "22. Must include a student Assessment strategy, namely formative and/or summative including assessment criteria, e.g. student engagement criteria – outstanding to unsatisfactory.",
         "23. Must include graduation criteria (attendance + grades) – and if they have diffrent rules for course graduation certificates - Attendace and/or Graduation Certificates",
-        "24. Must include a description of the student appeals process",
+        "24. Must include a description of the student appeals process. Must include a detailed description on how the process is carried out, like the review and decission and/or final decission.",
         "25. Must include details about staff Management and recruitment, namely staff and/or instructor development (e.g. induction and/or orientation, initial training, continuous/further training, professional development, development plans).",
         "26. Must include descriptions about instructor monitoring, instructor assessment and/or evaluation, and course monitoring",
         "27. Must include description about definition and delivery of instruction, namely NATO Systems Approach to Training (SAT) (e.g., the five SAT Phases briefly describe Purpose/Process/Product) and also about Global Programming.",
@@ -195,7 +195,7 @@ function analyze_with_openai($text, $criterion, $api_key) {
         "model" => "gpt-4-turbo",
         "messages" => [
             ["role" => "system", "content" => "You are a helpful assistant."],
-            ["role" => "user", "content" => "Analyze the following text to determine if the criterion is met:\n\nCriterion: $criterion\n\nDocument Text: $text\n\nAnswer with one of the following words **only**: Met, Partially Met, Not Met. Do not provide any additional comments or explanations."]
+            ["role" => "user", "content" => "Analyze the following text to determine if the criterion is met:\n\nCriterion: $criterion\n\nDocument Text: $text\n\nAnswer with one of the following words **only**: Met, Partially Met, Not Met. Do not provide any additional comments or explanations. Analyze the each criterion carefully and decide accurately. Pay attention to the KPI criterion. It there is no mention about them then criterion not met. If there are not well defined with thresholds then is partially met. If there is no list of key stakeholders then partially met."]
         ]
     ]);
 
