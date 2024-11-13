@@ -1,14 +1,15 @@
 <?php
-
-set_time_limit(300); // 300 seconds = 5 minutes
-
-// Drupal authentication
+set_time_limit(300);
 
 use Drupal\Core\DrupalKernel;
 use Symfony\Component\HttpFoundation\Request;
+use Dompdf\Dompdf;
+use Dompdf\Options;
+use PhpOffice\PhpWord\IOFactory;
+use Smalot\PdfParser\Parser;
 
 // Load the autoloader and Drupal Kernel
-$autoloader = require_once 'vendor/autoload.php'; // Adjust the path to your Drupal installation
+$autoloader = require_once 'vendor/autoload.php';
 $request = Request::createFromGlobals();
 
 // Boot the Drupal Kernel and handle the request
@@ -20,7 +21,7 @@ $currentUser = \Drupal::currentUser();
 
 // Check if the user is authenticated
 if ($currentUser->isAnonymous()) {
-    // Redirect to the login page if the user is not authenticated
+	// Redirect to the login page if the user is not authenticated
     header('Location: /access-denied.html');
     exit;
 }
@@ -28,7 +29,7 @@ if ($currentUser->isAnonymous()) {
 // If the user is authenticated, proceed with rendering the form
 
 // Directory to store the upload flags
-$upload_flag_dir = 'upload_flags';  // Change this to your preferred directory path
+$upload_flag_dir = 'upload_flags'; // Change this to your preferred directory path
 $uid = $currentUser->id();
 $upload_flag_file = $upload_flag_dir . '/user_' . $uid . '.txt';
 
@@ -49,19 +50,10 @@ if (!is_dir($upload_flag_dir)) {
 // Load required libraries for handling .docx and .pdf files
 require 'vendor/autoload.php';
 
-use PhpOffice\PhpWord\IOFactory;
-use Smalot\PdfParser\Parser;
-
-// OpenAI API Key
-$openai_api_key = 'YOUR_OPEN_AI_SECRET_KEY'; // Replace with your OpenAI API key
-
-// Enable error reporting for debugging
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+$openai_api_key = 'OPEN_AI_SECRET_KEY'; // Replace with your OpenAI API key
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Check if a file is uploaded and if there are any errors
+	// Check if a file is uploaded and if there are any errors
     if (!isset($_FILES['document']) || $_FILES['document']['error'] !== UPLOAD_ERR_OK) {
         echo json_encode(['error' => 'File upload error. Please try again.']);
         exit;
@@ -71,12 +63,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $file_type = $file['type'];
     $file_size = $file['size'];
 
-    // Allowed file types and size limit (2MB)
+	// Allowed file types and size limit (2MB)
     $allowed_types = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-    $max_file_size = 2 * 1024 * 1024; // 2MB
-
+    $max_file_size = 2 * 1024 * 1024;
+	
     // Validate file type and size
-    if (!in_array($file_type, $allowed_types)) {
+	if (!in_array($file_type, $allowed_types)) {
         echo json_encode(['error' => 'Invalid file type. Please upload a PDF or DOCX file.']);
         exit;
     }
@@ -87,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Extract text from the uploaded file
-    $extracted_text = '';
+	$extracted_text = '';
     try {
         if ($file_type === 'application/pdf') {
             $parser = new Parser();
@@ -113,7 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // Define criteria to be analyzed by OpenAI
+	// Define criteria to be analyzed by OpenAI
     $criteria_list = [
         "1. Should include and Introduction or Background – Short description of the organization or institution (who, what, why, where, how) and what the document covers.",
         "2. Must include a Policy Statement. This means a general statement (of the organization's commitment to quality. It states a commitment to customer requirements and the requirements of the standard. It also contains a pledge to work toward continual improvement).",
@@ -152,9 +144,9 @@ directives, Accountability, Transparency, Continuous Improvement, Cooperation, H
         "34. Should include a list of SOPs."
     ];
 
-    // Truncate the extracted text to ensure it doesn't exceed OpenAI's token limit
+	// Truncate the extracted text to ensure it doesn't exceed OpenAI's token limit
     $extracted_text = truncate_text($extracted_text, 4000); // Limit to approximately 4000 words
-
+	
     $results = [];
     foreach ($criteria_list as $criterion) {
         $result = analyze_with_openai($extracted_text, $criterion, $openai_api_key);
@@ -167,15 +159,37 @@ directives, Accountability, Transparency, Continuous Improvement, Cooperation, H
             "result" => $result
         ];
     }
-	
-	// After all checks are successful, create the flag file to mark that the user has uploaded a file
+
+    // After all checks are successful, create the flag file to mark that the user has uploaded a file
 if (file_put_contents($upload_flag_file, "User $uid has uploaded a file.") === false) {
     echo json_encode(['error' => 'Failed to create upload flag file.']);
     exit;
 }
 
-    // Return the results as JSON
-    echo json_encode(['results' => $results]);
+    $options = new Options();
+    $options->set('isHtml5ParserEnabled', true);
+    $dompdf = new Dompdf($options);
+
+    $pdfContent = '<h1>QA Policy Analysis Results</h1><hr>';
+    foreach ($results as $result) {
+        $pdfContent .= "<p><strong>{$result['criterion']}:</strong> {$result['result']}</p>";
+    }
+
+    $dompdf->loadHtml($pdfContent);
+    $dompdf->setPaper('A4', 'portrait');
+    $dompdf->render();
+
+    $outputDir = 'generated_pdfs';
+    if (!is_dir($outputDir)) {
+        mkdir($outputDir, 0755, true);
+    }
+    $pdfPath = "{$outputDir}/analysis_results_user_{$uid}.pdf";
+    file_put_contents($pdfPath, $dompdf->output());
+
+    echo json_encode([
+        'results' => $results,
+        'pdf_path' => '/' . $pdfPath
+    ]);
 }
 
 // Function to truncate text to avoid exceeding OpenAI's token limits
@@ -190,9 +204,8 @@ function truncate_text($text, $max_words = 4000) {
 // Function to interact with OpenAI API
 function analyze_with_openai($text, $criterion, $api_key) {
     $ch = curl_init();
-
     $data = json_encode([
-        "model" => "gpt-4-turbo",
+        "model" => "gpt-4o-mini",
         "messages" => [
             ["role" => "system", "content" => "You are a helpful assistant."],
             ["role" => "user", "content" => "Analyze the following text to determine if the criterion is met:\n\nCriterion: $criterion\n\nDocument Text: $text\n\nAnswer with one of the following words **only**: Met, Partially Met, Not Met. Do not provide any additional comments or explanations. Analyze the each criterion carefully and decide accurately. Pay attention to the KPI criterion. It there is no mention about them then criterion not met. If there are not well defined with thresholds then is partially met. If there is no list of key stakeholders then partially met."]
@@ -213,28 +226,13 @@ function analyze_with_openai($text, $criterion, $api_key) {
     $response = curl_exec($ch);
     $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-    if (curl_errno($ch)) {
-        error_log('cURL error: ' . curl_error($ch));
+    if (curl_errno($ch) || $http_code !== 200) {
+        error_log('OpenAI error: ' . curl_error($ch) . ' ' . $response);
         curl_close($ch);
         return false;
     }
 
     curl_close($ch);
-
-    error_log('OpenAI HTTP Code: ' . $http_code);
-    error_log('OpenAI Response: ' . $response);
-
-    if ($http_code !== 200) {
-        error_log('OpenAI returned error code: ' . $http_code);
-        return false;
-    }
-
     $response_data = json_decode($response, true);
-
-    if (isset($response_data['choices'][0]['message']['content'])) {
-        return $response_data['choices'][0]['message']['content'];
-    }
-
-    error_log('Invalid response from OpenAI.');
-    return false;
+    return $response_data['choices'][0]['message']['content'] ?? false;
 }
