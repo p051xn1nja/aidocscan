@@ -50,7 +50,7 @@ if (!is_dir($upload_flag_dir)) {
 // Load required libraries for handling .docx and .pdf files
 require 'vendor/autoload.php';
 
-$openai_api_key = 'OPEN_AI_SECRET_KEY'; // Replace with your OpenAI API key
+$openai_api_key = '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'; // Replace with your OpenAI API key
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 	// Check if a file is uploaded and if there are any errors
@@ -171,9 +171,22 @@ if (file_put_contents($upload_flag_file, "User $uid has uploaded a file.") === f
     $dompdf = new Dompdf($options);
 
     $pdfContent = '<h1>QA Policy Analysis Results</h1><hr>';
-    foreach ($results as $result) {
-        $pdfContent .= "<p><strong>{$result['criterion']}:</strong> {$result['result']}</p>";
+	foreach ($results as $result) {
+    $color = 'black'; // Default color
+    if (strtolower($result['result']) === 'met') {
+        $color = 'green';
+    } elseif (strtolower($result['result']) === 'partially met') {
+        $color = 'orange';
+    } elseif (strtolower($result['result']) === 'not met') {
+        $color = 'red';
     }
+
+    // Apply the color to the result text
+    $pdfContent .= "<p><strong>{$result['criterion']}:</strong> <span style='color: {$color}; font-weight: bold;'>{$result['result']}</span></p>";
+}
+    // foreach ($results as $result) {
+      //  $pdfContent .= "<p><strong>{$result['criterion']}:</strong> {$result['result']}</p>";
+    // }
 
     $dompdf->loadHtml($pdfContent);
     $dompdf->setPaper('A4', 'portrait');
