@@ -112,11 +112,14 @@ if ($currentUser->isAnonymous()) {
 
     <h3>The results will be generated below:</h3><hr />
     <div id="response"></div>
-    <div id="loadingSpinner" style="display: none;">
-        <div class="spinner">
-            <div class="loading-text">Analyzing...</div>
-        </div>
+    <div id="loadingSpinner" style="display: none; flex-direction: column; align-items: center;">
+    <div class="spinner">
+        <div class="loading-text">Analyzing...</div>
     </div>
+    <div id="progressContainer" style="width: 80%; margin-top: 20px;">
+        <div id="progressBar" style="width: 0%; height: 20px; background-color: #3498db; border-radius: 5px;"></div>
+    </div>
+</div>
 
     <script>
     document.getElementById('uploadForm').addEventListener('submit', function(event) {
@@ -125,10 +128,21 @@ if ($currentUser->isAnonymous()) {
         const formData = new FormData(this);
         const loadingSpinner = document.getElementById('loadingSpinner');
         const responseDiv = document.getElementById('response');
+		const progressBar = document.getElementById('progressBar');
 
-        // Show the loading spinner
-		loadingSpinner.style.display = 'block';
-        responseDiv.innerHTML = '';
+        // Show the loading spinner and reset progress bar
+		loadingSpinner.style.display = 'flex';
+    	responseDiv.innerHTML = '';
+    	progressBar.style.width = '0%';
+		
+		 // Simulate progress increment over time
+    	let progress = 0;
+    	const progressInterval = setInterval(() => {
+        if (progress < 80) {  // Simulate progress up to 80%
+            progress += 10;
+            progressBar.style.width = `${progress}%`;
+      	  }
+    	}, 500);
 
         fetch('upload.php', {
             method: 'POST',
@@ -138,6 +152,11 @@ if ($currentUser->isAnonymous()) {
         .then(data => {
 			 // Hide the loading spinner
             loadingSpinner.style.display = 'none';
+			
+			// Clear interval and set progress to 100% on completion
+        	clearInterval(progressInterval);
+     	   	progressBar.style.width = '100%';
+       	   	loadingSpinner.style.display = 'none';
 
             if (data.error) {
                 responseDiv.innerHTML = `<p style="color: red;">${data.error}</p>`;
@@ -170,7 +189,9 @@ if ($currentUser->isAnonymous()) {
             }
         })
         .catch(error => {
+			clearInterval(progressInterval);
             loadingSpinner.style.display = 'none';
+			progressBar.style.width = '0%';
             console.error('Error:', error);
             responseDiv.innerHTML = "An error occurred during the analysis.";
         });
