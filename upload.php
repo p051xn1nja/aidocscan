@@ -50,7 +50,7 @@ if (!is_dir($upload_flag_dir)) {
 // Load required libraries for handling .docx and .pdf files
 require 'vendor/autoload.php';
 
-$openai_api_key = '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'; // Replace with your OpenAI API key
+$openai_api_key = 'OPEN_AI_SECRET_KEY'; // Replace with your OpenAI API key
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 	// Check if a file is uploaded and if there are any errors
